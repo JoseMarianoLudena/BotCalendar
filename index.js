@@ -1,16 +1,18 @@
-app.get('/', (req, res) => {
-  res.send('¡Servidor funcionando! 🎉');
-});
-
-
-require('dotenv').config();
+// Agregar la ruta de prueba antes de inicializar todo
 const express = require('express');
 const bodyParser = require('body-parser');
 const { google } = require('googleapis');
+require('dotenv').config();
 
 const app = express();
 app.use(bodyParser.json());
 
+// Ruta de prueba para verificar si el servidor está funcionando
+app.get('/', (req, res) => {
+  res.send('¡Servidor funcionando! 🎉');
+});
+
+// Inicialización del cliente OAuth2 de Google
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
@@ -86,6 +88,7 @@ app.post('/book', async (req, res) => {
   res.json({ status: 'cita_agendada', id: response.data.id });
 });
 
+// Configuración del puerto y el servidor
 app.listen(process.env.PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${process.env.PORT}`);
 });
