@@ -64,29 +64,47 @@ app.get('/availability', async (req, res) => {
   const isAvailable = busySlots.length === 0;
   res.json({ available: isAvailable });
 });
-
+/*----------------------------------------------------------------------------- */
 // 📌 Crear cita
 app.post('/book', async (req, res) => {
-  if (!tokens) return res.status(401).send('No autenticado con Google');
-  oauth2Client.setCredentials(tokens);
+  if (!tokens) return res.status(401).send('No autenticado con Google'); // Verifica si los tokens de Google están presentes
+  oauth2Client.setCredentials(tokens); // Establece las credenciales del cliente OAuth2
 
+  // Extrae los datos del cuerpo de la solicitud
   const { summary, date, patientName } = req.body;
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-  const start = new Date(date);
-  const end = new Date(start.getTime() + 30 * 60 * 1000);
+  // Configura el inicio y final de la cita
+  const start = new Date(date); // La fecha de inicio
+  const end = new Date(start.getTime() + 30 * 60 * 1000); // La cita dura 30 minutos
 
-  const response = await calendar.events.insert({
-    calendarId: 'primary',
-    requestBody: {
-      summary: summary || `Cita con ${patientName}`,
-      start: { dateTime: start.toISOString(), timeZone: 'America/Lima' },
-      end: { dateTime: end.toISOString(), timeZone: 'America/Lima' },
-    },
-  });
+  // Inserta el evento en Google Calendar
+  try {
+    const response = await calendar.events.insert({
+      calendarId: 'primary',
+      requestBody: {
+        summary: summary || `Cita con ${patientName}`, // Si no se pasa resumen, usa un valor predeterminado
+        start: { dateTime: start.toISOString(), timeZone: 'America/Lima' },
+        end: { dateTime: end.toISOString(), timeZone: 'America/Lima' },
+      },
+    });
 
-  res.json({ status: 'cita_agendada', id: response.data.id });
+    // Devuelve la respuesta con el ID de la cita y el estado
+    res.json({ 
+      status: 'cita_agendada', 
+      citaId: response.data.id, 
+      message: 'Cita creada exitosamente.' 
+    });
+  } catch (error) {
+    console.error('Error al crear la cita:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'No se pudo agendar la cita.' 
+    });
+  }
 });
+
+/*----------------------------------------------------------------------------- */
 
 // Configuración del puerto y el servidor
 app.listen(process.env.PORT, () => {
