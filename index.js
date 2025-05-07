@@ -48,6 +48,10 @@ app.get('/availability', async (req, res) => {
   const { date } = req.query;
 
   try {
+
+    // 🔧 Forzamos interpretación en UTC agregando "Z" si no viene incluida
+    const normalizedDate = date.endsWith('Z') ? date : `${date}Z`;
+
     // Verificamos si la fecha es válida
     const start = new Date(date);
     if (isNaN(start.getTime())) { // Si la fecha no es válida, respondemos con un error
